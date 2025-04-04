@@ -1,0 +1,9 @@
+*.tar*
+*.log
+*.o*
+*.ko*
+*.mod*
+*.order*
+*.symvers*
+
+linux-source-6.1/*
