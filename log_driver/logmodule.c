@@ -3,6 +3,7 @@
 #include <linux/fs.h>
 #include <linux/init.h>
 #include <linux/ktime.h>
+#include <linux/device.h>
 #include <linux/module.h>
 #include <linux/printk.h>
 #include <linux/io_uring.h>
@@ -101,24 +102,43 @@ int logmodule_mmap(struct file *file, struct vm_area_struct *vma)
     return remap_pfn_range(vma, vma->vm_start, pfn, size, vma->vm_page_prot);
 }
 
+static struct device *dma_dummy_dev;
+
+static void dma_dummy_device_release(struct device *dev)
+{
+    printk(KERN_INFO "logmodule: rdv \t[ktime: %lld]\n", ktime_get());
+}
+
 static struct file_operations fops = {
     write : logmodule_write,
     open : logmodule_open,
     release : logmodule_release,
     uring_cmd : logmodule_uring_cmd,
     unlocked_ioctl : logmodule_ioctl,
+    mmap : logmodule_mmap,
 };
 
 static int __init logmodule_init(void)
 {
-    kbuf = dma_alloc_coherent(NULL, BUF_SIZE, &dma_handle, GFP_KERNEL);
+    dma_dummy_dev = kzalloc(sizeof(struct device), GFP_KERNEL);
+    dma_dummy_dev->coherent_dma_mask = DMA_BIT_MASK(32);
+    dma_dummy_dev->release = dma_dummy_device_release;
+
+    dev_set_name(dma_dummy_dev, "dma_dummy_dev");
+    dev_set_drvdata(dma_dummy_dev, NULL);
+    device_initialize(dma_dummy_dev);
+
+    kbuf = dma_alloc_coherent(dma_dummy_dev, BUF_SIZE, &dma_handle, GFP_KERNEL);
 
     if (!kbuf)
     {
-        pr_err("Failed to allocate DMA buffer\n");
+        put_device(dma_dummy_dev);
+        kfree(dma_dummy_dev);
+
+        pr_err("logmodule: Failed to allocate DMA buffer\n");
         return -ENOMEM;
     }
-    pr_info("DMA buffer allocated: virt=%p, phys=0x%llx\n", kbuf, (unsigned long long)dma_handle);
+    pr_info("logmodule: DMA buffer allocated: virt=%p, phys=0x%llx\n", kbuf, (unsigned long long)dma_handle);
 
     major = register_chrdev(0, DEVICE_NAME, &fops);
 
@@ -149,9 +169,16 @@ static void __exit logmodule_exit(void)
 
     if (kbuf)
     {
-        dma_free_coherent(NULL, BUF_SIZE, kbuf, dma_handle);
-        pr_info("Freed DMA buffer\n");
+        dma_free_coherent(dma_dummy_dev, BUF_SIZE, kbuf, dma_handle);
+        put_device(dma_dummy_dev);
+        pr_info("logmodule: Freed DMA buffer\n");
         kbuf = NULL;
+    }
+
+    if (dma_dummy_dev)
+    {
+        put_device(dma_dummy_dev);
+        kfree(dma_dummy_dev);
     }
 
     printk(KERN_INFO "logmodule: ext \t[open_n: %d][write_n: %d][ktime: %lld]\n", open_n, write_n, ktime_get());
