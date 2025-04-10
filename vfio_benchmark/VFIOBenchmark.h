@@ -11,6 +11,8 @@ public:
     VFIOBenchmark(std::string pathToDevice, size_t mmioSize);
     ~VFIOBenchmark();
 
+    void Benchmark();
+
 private:
     void *m_mappedBase;
     size_t m_mmioSize;

@@ -13,17 +13,19 @@
 #define BUF_SIZE PAGE_SIZE
 
 static ktime_t anchor_time;
+
 static uint open_n = 0;
 static uint write_n = 0;
+
 static struct class *cls;
 static int major;
 
 void *kbuf;
 dma_addr_t dma_handle;
+static struct device *dma_dummy_dev;
 
 enum io_cmd
 {
-    DEFAULT,
     HELLO
 };
 
@@ -35,16 +37,36 @@ enum
 
 static atomic_t already_open = ATOMIC_INIT(CDEV_FREE);
 
+static ssize_t logmodule_write(struct file *, const char __user *, size_t len, loff_t *);
+static int logmodule_uring_cmd(struct io_uring_cmd *cmd, unsigned int issue_flags);
+static int logmodule_open(struct inode *inode, struct file *file);
+static int logmodule_release(struct inode *inode, struct file *file);
+long logmodule_ioctl(struct file *file, unsigned int cmd, unsigned long arg);
+int logmodule_mmap(struct file *file, struct vm_area_struct *vma);
+static void dma_dummy_device_release(struct device *dev);
+
+static int __init logmodule_init(void);
+static void __exit logmodule_exit(void);
+
+static struct file_operations fops = {
+    write : logmodule_write,
+    open : logmodule_open,
+    release : logmodule_release,
+    uring_cmd : logmodule_uring_cmd,
+    unlocked_ioctl : logmodule_ioctl,
+    mmap : logmodule_mmap,
+};
+
 static ssize_t logmodule_write(struct file *, const char __user *, size_t len, loff_t *)
 {
-    printk(KERN_INFO "logmodule: tch \t[write_n: %d][ktime: %lld]\n", write_n, ktime_get());
+    printk(KERN_INFO "logmodule: wrt \t[ktime: %lld][write_n: %d]\n", ktime_get(), write_n);
     write_n += 1;
     return len;
 }
 
 static int logmodule_uring_cmd(struct io_uring_cmd *cmd, unsigned int issue_flags)
 {
-    printk(KERN_INFO "logmodule: iou \t[opcode: %d][ktime: %lld]\n", cmd->cmd_op, ktime_get());
+    printk(KERN_INFO "logmodule: iou \t[ktime: %lld][opcode: %d]\n", ktime_get(), cmd->cmd_op);
 
     io_uring_cmd_done(cmd, 0, 0, issue_flags);
     return 0;
@@ -59,7 +81,7 @@ static int logmodule_open(struct inode *inode, struct file *file)
 
     try_module_get(THIS_MODULE);
 
-    printk(KERN_INFO "logmodule: opn \t[open_n: %d][ktime: %lld]\n", open_n, ktime_get());
+    printk(KERN_INFO "logmodule: opn \t[ktime: %lld][open_n: %d]\n", ktime_get(), open_n);
 
     open_n += 1;
     return 0;
@@ -76,14 +98,11 @@ static int logmodule_release(struct inode *inode, struct file *file)
 
 long logmodule_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
+    printk(KERN_INFO "logmodule: ioc \t[ktime: %lld][cmd: %d]\n", ktime_get(), cmd);
     switch (cmd)
     {
     case HELLO:
-        printk(KERN_INFO "logmodule: ioc \t[ktime: %lld]\n", ktime_get());
         return 0;
-
-    case DEFAULT:
-        break;
     default:
         return 0;
     }
@@ -93,6 +112,7 @@ long logmodule_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 
 int logmodule_mmap(struct file *file, struct vm_area_struct *vma)
 {
+    printk(KERN_INFO "logmodule: mmp \t[ktime: %lld]\n", ktime_get());
     unsigned long pfn = virt_to_phys(kbuf) >> PAGE_SHIFT;
     size_t size = vma->vm_end - vma->vm_start;
 
@@ -102,21 +122,10 @@ int logmodule_mmap(struct file *file, struct vm_area_struct *vma)
     return remap_pfn_range(vma, vma->vm_start, pfn, size, vma->vm_page_prot);
 }
 
-static struct device *dma_dummy_dev;
-
 static void dma_dummy_device_release(struct device *dev)
 {
     printk(KERN_INFO "logmodule: rdv \t[ktime: %lld]\n", ktime_get());
 }
-
-static struct file_operations fops = {
-    write : logmodule_write,
-    open : logmodule_open,
-    release : logmodule_release,
-    uring_cmd : logmodule_uring_cmd,
-    unlocked_ioctl : logmodule_ioctl,
-    mmap : logmodule_mmap,
-};
 
 static int __init logmodule_init(void)
 {
@@ -138,22 +147,22 @@ static int __init logmodule_init(void)
         pr_err("logmodule: Failed to allocate DMA buffer\n");
         return -ENOMEM;
     }
-    pr_info("logmodule: DMA buffer allocated: virt=%p, phys=0x%llx\n", kbuf, (unsigned long long)dma_handle);
+    pr_info("logmodule: dmy [ktime: %lld][virt %p][phys 0x%llx]\n", ktime_get(), kbuf, (unsigned long long)dma_handle);
 
     major = register_chrdev(0, DEVICE_NAME, &fops);
 
     if (major > 0)
     {
         anchor_time = ktime_get();
-        printk(KERN_INFO "logmodule: lod \t[major: %d][ktime: %lld]\n", major, anchor_time);
 
         cls = class_create(THIS_MODULE, DEVICE_NAME);
         device_create(cls, NULL, MKDEV(major, 0), NULL, DEVICE_NAME);
-        printk(KERN_INFO "logmodule: Device created on /dev/%s\n", DEVICE_NAME);
+
+        printk(KERN_INFO "logmodule: lod \t[ktime: %lld][major: %d]\n", anchor_time, major);
     }
     else
     {
-        printk(KERN_INFO "logmodule: failed to load");
+        printk(KERN_INFO "logmodule: fal \t[ktime: %lld]\n", anchor_time);
         return major;
     }
 

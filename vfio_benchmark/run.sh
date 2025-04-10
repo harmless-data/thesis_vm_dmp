@@ -1,1 +1,2 @@
-./build/vfio_benchmark
+sudo ./build/vfio_benchmark
+
