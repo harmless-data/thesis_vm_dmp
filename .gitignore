@@ -5,5 +5,8 @@
 *.mod*
 *.order*
 *.symvers*
+*.perf*
+*.svg
 
 linux-source-6.1/*
+*FlameGraph/*

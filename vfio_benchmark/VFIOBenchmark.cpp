@@ -1,5 +1,8 @@
 #include "VFIOBenchmark.h"
 
+#include <chrono>
+#include <thread>
+
 VFIOBenchmark::VFIOBenchmark(std::string pathToDevice, size_t mmioSize)
     : m_mmioSize{mmioSize}
 {
@@ -24,5 +27,8 @@ VFIOBenchmark::~VFIOBenchmark()
 
 void VFIOBenchmark::Benchmark()
 {
+    using namespace std::chrono_literals;
+
+    std::this_thread::sleep_for(10ms);
     printf("[VFIO] Starting Benchmark\n");
 }

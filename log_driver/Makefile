@@ -1,4 +1,7 @@
-obj-m += logmodule.o
+obj-m := logmodule.o
+logmodule-objs := main.o
+
+ccflags-y += -I$(PWD)
 
 PWD := $(CURDIR)
 
@@ -7,4 +10,3 @@ all:
 
 clean:
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
-	

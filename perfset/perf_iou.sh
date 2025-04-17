@@ -1,0 +1,19 @@
+sudo perf record -e syscalls:sys_enter_io_cancel \
+    -e syscalls:sys_enter_io_destroy \
+    -e syscalls:sys_enter_io_getevents \
+    -e syscalls:sys_enter_io_pgetevents \
+    -e syscalls:sys_enter_io_setup \
+    -e syscalls:sys_enter_io_submit \
+    -e syscalls:sys_enter_io_uring_enter \
+    -e syscalls:sys_enter_io_uring_register \
+    -e syscalls:sys_enter_io_uring_setup \
+    -e syscalls:sys_exit_io_cancel \
+    -e syscalls:sys_exit_io_destroy \
+    -e syscalls:sys_exit_io_getevents \
+    -e syscalls:sys_exit_io_pgetevents \
+    -e syscalls:sys_exit_io_setup \
+    -e syscalls:sys_exit_io_submit \
+    -e syscalls:sys_exit_io_uring_enter \
+    -e syscalls:sys_exit_io_uring_register \
+    -e syscalls:sys_exit_io_uring_setup \
+    -- $1
