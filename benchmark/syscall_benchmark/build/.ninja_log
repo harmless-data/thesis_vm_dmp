@@ -1,0 +1,4 @@
+# ninja log v5
+9	201	1744903399759883807	CMakeFiles/syscall_benchmark.dir/SyscallBenchmark.cpp.o	6930025b5e02f2e2
+11	452	1744903427857894358	CMakeFiles/syscall_benchmark.dir/main.cpp.o	f5dd61cbc98ef9db
+454	726	1744903428126894461	syscall_benchmark	60e3303484274b0b
