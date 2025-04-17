@@ -6,4 +6,12 @@ sudo perf record -e syscalls:sys_enter_ioctl \
     -e syscalls:sys_exit_close  \
     -e syscalls:sys_enter_mmap \
     -e syscalls:sys_exit_mmap \
+    -e logmodule:exitf \
+    -e logmodule:initf \
+    -e logmodule:ioctl \
+    -e logmodule:mmap \
+    -e logmodule:open \
+    -e logmodule:release \
+    -e logmodule:uring_cmd \
+    -e logmodule:write \ 
     -- $1
