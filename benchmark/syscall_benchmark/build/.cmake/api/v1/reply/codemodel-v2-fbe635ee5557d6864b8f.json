@@ -49,8 +49,8 @@
 	"kind" : "codemodel",
 	"paths" : 
 	{
-		"build" : "/home/tpi/documents/syscall_benchmark/build",
-		"source" : "/home/tpi/documents/syscall_benchmark"
+		"build" : "/home/tpi/documents/benchmark/syscall_benchmark/build",
+		"source" : "/home/tpi/documents/benchmark/syscall_benchmark"
 	},
 	"version" : 
 	{

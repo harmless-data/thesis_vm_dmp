@@ -16,12 +16,5 @@ sudo perf record -e syscalls:sys_enter_io_cancel \
     -e syscalls:sys_exit_io_uring_enter \
     -e syscalls:sys_exit_io_uring_register \
     -e syscalls:sys_exit_io_uring_setup \
-    -e logmodule:exitf \
-    -e logmodule:initf \
-    -e logmodule:ioctl \
-    -e logmodule:mmap \
-    -e logmodule:open \
-    -e logmodule:release \
-    -e logmodule:uring_cmd \
-    -e logmodule:write \ 
+    -e logmodule:* 
     -- $1

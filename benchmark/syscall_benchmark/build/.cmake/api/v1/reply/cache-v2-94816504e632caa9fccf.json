@@ -55,7 +55,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/home/tpi/documents/syscall_benchmark/build"
+			"value" : "/home/tpi/documents/benchmark/syscall_benchmark/build"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -527,7 +527,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/tpi/documents/syscall_benchmark/build/CMakeFiles/pkgRedirects"
+			"value" : "/home/tpi/documents/benchmark/syscall_benchmark/build/CMakeFiles/pkgRedirects"
 		},
 		{
 			"name" : "CMAKE_GENERATOR",
@@ -587,7 +587,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/home/tpi/documents/syscall_benchmark"
+			"value" : "/home/tpi/documents/benchmark/syscall_benchmark"
 		},
 		{
 			"name" : "CMAKE_INSTALL_PREFIX",
@@ -1135,7 +1135,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/tpi/documents/syscall_benchmark/build"
+			"value" : "/home/tpi/documents/benchmark/syscall_benchmark/build"
 		},
 		{
 			"name" : "syscall_benchmark_IS_TOP_LEVEL",
@@ -1159,7 +1159,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/tpi/documents/syscall_benchmark"
+			"value" : "/home/tpi/documents/benchmark/syscall_benchmark"
 		}
 	],
 	"kind" : "cache",

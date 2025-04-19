@@ -1,12 +1,12 @@
 [
 {
-  "directory": "/home/tpi/documents/syscall_benchmark/build",
-  "command": "/usr/bin/g++  -g -O2 -O2 -g -DNDEBUG -std=gnu++17 -o CMakeFiles/syscall_benchmark.dir/main.cpp.o -c /home/tpi/documents/syscall_benchmark/main.cpp",
-  "file": "/home/tpi/documents/syscall_benchmark/main.cpp"
+  "directory": "/home/tpi/documents/benchmark/syscall_benchmark/build",
+  "command": "/usr/bin/g++  -g -O2 -O2 -g -DNDEBUG -std=gnu++17 -o CMakeFiles/syscall_benchmark.dir/main.cpp.o -c /home/tpi/documents/benchmark/syscall_benchmark/main.cpp",
+  "file": "/home/tpi/documents/benchmark/syscall_benchmark/main.cpp"
 },
 {
-  "directory": "/home/tpi/documents/syscall_benchmark/build",
-  "command": "/usr/bin/g++  -g -O2 -O2 -g -DNDEBUG -std=gnu++17 -o CMakeFiles/syscall_benchmark.dir/SyscallBenchmark.cpp.o -c /home/tpi/documents/syscall_benchmark/SyscallBenchmark.cpp",
-  "file": "/home/tpi/documents/syscall_benchmark/SyscallBenchmark.cpp"
+  "directory": "/home/tpi/documents/benchmark/syscall_benchmark/build",
+  "command": "/usr/bin/g++  -g -O2 -O2 -g -DNDEBUG -std=gnu++17 -o CMakeFiles/syscall_benchmark.dir/SyscallBenchmark.cpp.o -c /home/tpi/documents/benchmark/syscall_benchmark/SyscallBenchmark.cpp",
+  "file": "/home/tpi/documents/benchmark/syscall_benchmark/SyscallBenchmark.cpp"
 }
 ]

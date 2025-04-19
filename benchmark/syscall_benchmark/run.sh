@@ -1,0 +1,1 @@
+sudo ./perf_syscall.sh build/syscall_benchmark

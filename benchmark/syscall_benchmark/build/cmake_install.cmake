@@ -1,4 +1,4 @@
-# Install script for directory: /home/tpi/documents/syscall_benchmark
+# Install script for directory: /home/tpi/documents/benchmark/syscall_benchmark
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/tpi/documents/syscall_benchmark/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/tpi/documents/benchmark/syscall_benchmark/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

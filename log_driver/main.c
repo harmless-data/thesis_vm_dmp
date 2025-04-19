@@ -12,7 +12,7 @@
 #include <linux/sched.h>
 
 #define DEVICE_NAME "logmodule"
-#define BUF_SIZE PAGE_SIZE
+#define BUF_SIZE PAGE_SIZE * 10
 
 #define CREATE_TRACE_POINTS
 #include "trace.h"
@@ -38,6 +38,12 @@ enum
 {
     CDEV_FREE,
     CDEV_EXCLUSIVE,
+};
+
+struct WriteWrapper
+{
+    int index;
+    char value;
 };
 
 static atomic_t already_open = ATOMIC_INIT(CDEV_FREE);
@@ -112,12 +118,14 @@ long logmodule_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
     trace_ioctl(current->pid);
 
     printk(KERN_INFO "logmodule: ioc \t[ktime: %lld][cmd: %d][pid: %d]\n", ktime_get(), cmd, current->pid);
+
     switch (cmd)
     {
-    case HELLO:
-        return 0;
+    case 123:
+        printk(KERN_INFO "logmodule: cmd recv");
+
     default:
-        return 0;
+        break;
     }
 
     return 0;
