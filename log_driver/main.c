@@ -10,12 +10,28 @@
 #include <linux/io_uring.h>
 #include <linux/dma-mapping.h>
 #include <linux/sched.h>
+#include <linux/delay.h>
 
 #define DEVICE_NAME "logmodule"
-#define BUF_SIZE PAGE_SIZE * 10
+#define BUF_SIZE PAGE_SIZE
 
 #define CREATE_TRACE_POINTS
 #include "trace.h"
+
+#ifdef ENABLE_LOGMODULE_LOGGING
+#define LM_LOG(fmt, ...) \
+    pr_info("logmodule: " fmt, ##__VA_ARGS__)
+#else
+#define LM_LOG(fmt, ...) \
+    nop();
+#endif
+
+#ifdef ENABLE_IOCTL_DELAY
+#define IOCTL_DELAY() mdelay(1)
+#else
+#define IOCTL_DELAY() nop()
+
+#endif
 
 static ktime_t anchor_time;
 
@@ -59,6 +75,8 @@ static void dma_dummy_device_release(struct device *dev);
 static int __init logmodule_init(void);
 static void __exit logmodule_exit(void);
 
+void dump_kbuf(int bytes);
+
 static struct file_operations fops = {
     write : logmodule_write,
     open : logmodule_open,
@@ -68,11 +86,38 @@ static struct file_operations fops = {
     mmap : logmodule_mmap,
 };
 
+void dump_kbuf(int bytes)
+{
+    int i;
+    char buf[256];
+    int len = 0;
+
+    if (!kbuf)
+    {
+        LM_LOG("kbuf is NULL!\n");
+        return;
+    }
+
+    if (bytes > BUF_SIZE)
+        bytes = BUF_SIZE;
+
+    for (i = 0; i < bytes; ++i)
+    {
+        len += snprintf(buf + len, sizeof(buf) - len, "%02x ", ((unsigned char *)kbuf)[i]);
+
+        if ((i + 1) % 16 == 0 || i == bytes - 1)
+        {
+            LM_LOG("kbuf: [%03d] \t%s\n", i - (i % 16), buf);
+            len = 0;
+        }
+    }
+}
+
 static ssize_t logmodule_write(struct file *, const char __user *, size_t len, loff_t *)
 {
     trace_write(current->pid);
 
-    printk(KERN_INFO "logmodule: wrt \t[ktime: %lld][write_n: %d][pid: %d]\n", ktime_get(), write_n, current->pid);
+    LM_LOG("wrt \t[ktime: %lld][write_n: %d][pid: %d]\n", ktime_get(), write_n, current->pid);
     write_n += 1;
     return len;
 }
@@ -80,7 +125,7 @@ static ssize_t logmodule_write(struct file *, const char __user *, size_t len, l
 static int logmodule_uring_cmd(struct io_uring_cmd *cmd, unsigned int issue_flags)
 {
     trace_uring_cmd(current->pid);
-    printk(KERN_INFO "logmodule: iou \t[ktime: %lld][opcode: %d][pid: %d]\n", ktime_get(), cmd->cmd_op, current->pid);
+    LM_LOG("iou \t[ktime: %lld][opcode: %d][pid: %d]\n", ktime_get(), cmd->cmd_op, current->pid);
 
     io_uring_cmd_done(cmd, 0, 0, issue_flags);
     return 0;
@@ -96,7 +141,7 @@ static int logmodule_open(struct inode *inode, struct file *file)
 
     try_module_get(THIS_MODULE);
 
-    printk(KERN_INFO "logmodule: opn \t[ktime: %lld][open_n: %d][pid: %d]\n", ktime_get(), open_n, current->pid);
+    LM_LOG("opn \t[ktime: %lld][open_n: %d][pid: %d]\n", ktime_get(), open_n, current->pid);
 
     open_n += 1;
     return 0;
@@ -109,7 +154,7 @@ static int logmodule_release(struct inode *inode, struct file *file)
     atomic_set(&already_open, CDEV_FREE);
     module_put(THIS_MODULE);
 
-    printk(KERN_INFO "logmodule: rel \t[ktime: %lld][pid: %d]\n", ktime_get(), current->pid);
+    LM_LOG("rel \t[ktime: %lld][pid: %d]\n", ktime_get(), current->pid);
     return 0;
 }
 
@@ -117,17 +162,27 @@ long logmodule_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
     trace_ioctl(current->pid);
 
-    printk(KERN_INFO "logmodule: ioc \t[ktime: %lld][cmd: %d][pid: %d]\n", ktime_get(), cmd, current->pid);
+    LM_LOG("ioc \t[ktime: %lld][cmd: %d][pid: %d]\n", ktime_get(), cmd, current->pid);
 
-    switch (cmd)
+    if (cmd >= BUF_SIZE)
     {
-    case 123:
-        printk(KERN_INFO "logmodule: cmd recv");
-
-    default:
-        break;
+        LM_LOG("ioc \t[cmd ouf of reference range (%d/%ld)]", cmd, BUF_SIZE);
+        return -EINVAL;
     }
 
+    if (!kbuf)
+    {
+        LM_LOG("ioc \t[kbuf is NULL]");
+        return -EINVAL;
+    }
+
+    if (copy_from_user(((char *)kbuf) + cmd, (void __user *)arg, sizeof(char)))
+    {
+        LM_LOG("ioc \t[copy failed]");
+        return -EFAULT;
+    }
+
+    IOCTL_DELAY();
     return 0;
 }
 
@@ -135,7 +190,7 @@ int logmodule_mmap(struct file *file, struct vm_area_struct *vma)
 {
     trace_mmap(current->pid);
 
-    printk(KERN_INFO "logmodule: mmp \t[ktime: %lld][pid: %d]\n", ktime_get(), current->pid);
+    LM_LOG("mmp \t[ktime: %lld][pid: %d]\n", ktime_get(), current->pid);
     unsigned long pfn = virt_to_phys(kbuf) >> PAGE_SHIFT;
     size_t size = vma->vm_end - vma->vm_start;
 
@@ -147,7 +202,7 @@ int logmodule_mmap(struct file *file, struct vm_area_struct *vma)
 
 static void dma_dummy_device_release(struct device *dev)
 {
-    printk(KERN_INFO "logmodule: rdv \t[ktime: %lld][pid: %d]\n", ktime_get(), current->pid);
+    LM_LOG("rdv \t[ktime: %lld][pid: %d]\n", ktime_get(), current->pid);
 }
 
 static int __init logmodule_init(void)
@@ -183,11 +238,11 @@ static int __init logmodule_init(void)
         cls = class_create(THIS_MODULE, DEVICE_NAME);
         device_create(cls, NULL, MKDEV(major, 0), NULL, DEVICE_NAME);
 
-        printk(KERN_INFO "logmodule: lod \t[ktime: %lld][major: %d]\n", anchor_time, major);
+        LM_LOG("lod \t[ktime: %lld][major: %d]\n", anchor_time, major);
     }
     else
     {
-        printk(KERN_INFO "logmodule: fal \t[ktime: %lld]\n", anchor_time);
+        LM_LOG("fal \t[ktime: %lld]\n", anchor_time);
         return major;
     }
 
@@ -196,6 +251,8 @@ static int __init logmodule_init(void)
 
 static void __exit logmodule_exit(void)
 {
+    dump_kbuf(BUF_SIZE);
+
     trace_exitf(current->pid);
 
     device_destroy(cls, MKDEV(major, 0));
@@ -207,7 +264,7 @@ static void __exit logmodule_exit(void)
     {
         dma_free_coherent(dma_dummy_dev, BUF_SIZE, kbuf, dma_handle);
         put_device(dma_dummy_dev);
-        pr_info("logmodule: Freed DMA buffer\n");
+        pr_info("Freed DMA buffer\n");
         kbuf = NULL;
     }
 
@@ -217,7 +274,7 @@ static void __exit logmodule_exit(void)
         kfree(dma_dummy_dev);
     }
 
-    printk(KERN_INFO "logmodule: ext \t[open_n: %d][write_n: %d][ktime: %lld]\n", open_n, write_n, ktime_get());
+    LM_LOG("ext \t[open_n: %d][write_n: %d][ktime: %lld]\n", open_n, write_n, ktime_get());
 }
 
 module_init(logmodule_init);

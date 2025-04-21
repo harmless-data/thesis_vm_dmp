@@ -1,34 +1,28 @@
 #include "VFIOBenchmark.h"
 
-#include <chrono>
-#include <thread>
-
-VFIOBenchmark::VFIOBenchmark(std::string pathToDevice, size_t mmioSize)
+VFIOBenchmark::VFIOBenchmark(std::string path, size_t mmioSize)
     : m_mmioSize{mmioSize}
 {
-    printf("[VFIO] Init\n");
+    m_fd = open(path.c_str(), O_RDWR | O_SYNC);
 
-    m_fd = open(pathToDevice.c_str(), O_RDWR | O_SYNC);
     m_mappedBase = mmap(nullptr, m_mmioSize, PROT_READ | PROT_WRITE, MAP_SHARED, m_fd, 0);
 
-    printf("[VFIO] File Descriptor: %ld\n", m_fd);
-    printf("[VFIO] Memory Map cb: %p\n", m_mappedBase);
-
     if (!m_mappedBase)
-    {
-        printf("[VFIO] memory map of driver failed\n");
-    }
+        throw 666;
 }
 
 VFIOBenchmark::~VFIOBenchmark()
 {
-    auto ret = munmap(m_mappedBase, m_mmioSize);
+    munmap(m_mappedBase, m_mmioSize);
+    close(m_fd);
 }
 
-void VFIOBenchmark::Benchmark()
+void VFIOBenchmark::Run()
 {
-    using namespace std::chrono_literals;
+    auto bufferAsArray = static_cast<char *>(m_mappedBase);
 
-    std::this_thread::sleep_for(10ms);
-    printf("[VFIO] Starting Benchmark\n");
+    for (int i = 0; i < m_mmioSize; i++)
+    {
+        bufferAsArray[i] = '?';
+    }
 }

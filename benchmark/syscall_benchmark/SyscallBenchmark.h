@@ -9,13 +9,14 @@ struct WriteWrapper
 class SyscallBenchmark
 {
 public:
-    SyscallBenchmark(unsigned int cycles, std::string path, std::string data = "");
+    SyscallBenchmark(std::string path, size_t cycles);
+    ~SyscallBenchmark();
 
     int Run();
-    void RunIOCtl();
+
+    void RunVfioComp();
 
 private:
-    const unsigned int m_cycles;
-    const std::string m_path;
-    const std::string m_data;
+    size_t m_cycles;
+    int m_fd;
 };

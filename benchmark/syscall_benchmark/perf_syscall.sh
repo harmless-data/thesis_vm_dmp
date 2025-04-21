@@ -7,13 +7,8 @@ else
     echo "$1"
 fi
 
-sudo perf record -e syscalls:sys_enter_ioctl \
+taskset -c 3 sudo perf record -F 1000 -g -k mono --call-graph dwarf -m 1024 \
+    -e syscalls:sys_enter_ioctl \
     -e syscalls:sys_exit_ioctl \
-    -e syscalls:sys_enter_open \
-    -e syscalls:sys_exit_open \
-    -e syscalls:sys_enter_close  \
-    -e syscalls:sys_exit_close  \
-    -e syscalls:sys_enter_mmap \
-    -e syscalls:sys_exit_mmap \
-    -e logmodule:* \
-    -- "$1"
+    # -e logmodule:ioctl \
+    -- taskset -c 2 "$1"

@@ -3,15 +3,16 @@
 #include <sys/stat.h>
 
 #include <fcntl.h>
+#include <unistd.h>
 #include <string>
 
 class VFIOBenchmark
 {
 public:
-    VFIOBenchmark(std::string pathToDevice, size_t mmioSize);
+    VFIOBenchmark(std::string path, size_t mmioSize);
     ~VFIOBenchmark();
 
-    void Benchmark();
+    void Run();
 
 private:
     void *m_mappedBase;

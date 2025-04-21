@@ -1,4 +1,4 @@
-#include "SyscallBenchmark.h"
+#include "VFIOBenchmark.h"
 
 #include <unistd.h>
 
@@ -6,9 +6,9 @@
 
 int main(int argc, char const *argv[])
 {
-    SyscallBenchmark bench(DEVICE_NAME, sysconf(_SC_PAGESIZE));
+    VFIOBenchmark bench(DEVICE_NAME, sysconf(_SC_PAGESIZE));
 
-    bench.RunVfioComp();
+    bench.Run();
 
     return 0;
 }

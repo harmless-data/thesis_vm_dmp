@@ -4,41 +4,34 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 
-SyscallBenchmark::SyscallBenchmark(unsigned int cycles, std::string path, std::string data)
-    : m_cycles{cycles}, m_path{path}, m_data{data}
+SyscallBenchmark::SyscallBenchmark(std::string path, size_t cycles)
+    : m_cycles{cycles}
 {
+    m_fd = open(path.c_str(), O_RDWR);
+}
+
+SyscallBenchmark::~SyscallBenchmark()
+{
+    close(m_fd);
 }
 
 int SyscallBenchmark::Run()
 {
     for (int i{0}; i < m_cycles; i++)
     {
-        printf("\r%d/%d", i + 1, m_cycles);
-        auto fd = open(m_path.c_str(), O_RDWR);
-
-        auto written = write(fd, m_data.c_str(), 4);
+        auto written = write(m_fd, NULL, 4);
 
         if (written < 0)
-        {
             throw 666;
-        }
-
-        auto _ = close(fd);
     }
-    printf("\n");
     return 0;
 }
 
-void SyscallBenchmark::RunIOCtl()
+void SyscallBenchmark::RunVfioComp()
 {
-    WriteWrapper toWrite;
-
-    toWrite.index = 0;
-    toWrite.value = "0";
-
-    auto fd = open(m_path.c_str(), O_RDWR);
-
-    int ret = ioctl(fd, 123, NULL);
-
-    auto _ = close(fd);
+    for (int i = 0; i < 10; i++)
+    {
+        ioctl(m_fd, i, "!");
+        sleep(1);
+    }
 }
