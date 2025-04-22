@@ -7,8 +7,9 @@ else
     echo "$1"
 fi
 
-taskset -c 3 sudo perf record -F 1000 -g -k mono --call-graph dwarf -m 1024 \
-    -e syscalls:sys_enter_ioctl \
-    -e syscalls:sys_exit_ioctl \
+    # -e syscalls:sys_exit_ioctl \
     # -e logmodule:ioctl \
+
+taskset -c 3 sudo perf record -F 1000 -g -k mono --call-graph fp -m 1024 \
+    -e syscalls:sys_enter_ioctl \
     -- taskset -c 2 "$1"
