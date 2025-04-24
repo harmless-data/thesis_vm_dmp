@@ -9,7 +9,13 @@ UringBenchmark::UringBenchmark(std::string path, uint64_t queDepth)
 {
     m_fd = open(path.c_str(), O_RDWR);
 
-    io_uring_queue_init(m_queDepth, &m_uring, 0);
+    if (io_uring_queue_init(m_queDepth, &m_uring, IORING_SETUP_SQPOLL) < 0)
+    {
+        std::cerr << "Uring Failed to set up\n";
+        return;
+    }
+
+    // io_uring_queue_init_params() <- EH ? should probably do this
 }
 
 UringBenchmark::~UringBenchmark()
@@ -20,27 +26,61 @@ UringBenchmark::~UringBenchmark()
 
 void UringBenchmark::Run()
 {
+    BasicUringWrite();
+}
 
-    // sqe - submission queue entry
-    auto sqe = io_uring_get_sqe(&m_uring);
+void UringBenchmark::StressTest(int n_items)
+{
+    static const char buf[] = "buf";
 
-    static struct io_uring_cmd cmd = {
-        .data = 0,
-        .cmd_op = '*',
-        .cmd_len = 0};
+    for (int i = 0; i < n_items; i++)
+    {
 
-    sqe->opcode = IORING_OP_URING_CMD;
-    sqe->fd = m_fd;
-    sqe->addr = (uintptr_t)&cmd;
-    sqe->len = sizeof(cmd);
+        m_sqe = io_uring_get_sqe(&m_uring);
+
+        if (!m_sqe)
+        {
+            std::cerr << "Failed to get SQE\n";
+            return;
+        }
+
+        m_sqe->opcode = IORING_OP_WRITE;
+        m_sqe->fd = m_fd;
+        m_sqe->addr = (uintptr_t)buf;
+        m_sqe->len = sizeof(buf);
+    }
 
     io_uring_submit(&m_uring);
 
-    struct io_uring_cqe *cqe;
+    io_uring_wait_cqe(&m_uring, &m_cqe);
 
-    io_uring_wait_cqe(&m_uring, &cqe);
+    std::cout << "uring return:" << m_cqe->res << "\n";
 
-    std::cout << "uring return:" << cqe->res << "\n";
+    io_uring_cqe_seen(&m_uring, m_cqe);
+}
 
-    io_uring_cqe_seen(&m_uring, cqe);
+void UringBenchmark::BasicUringWrite()
+{
+    static const char buf[] = "buf";
+
+    m_sqe = io_uring_get_sqe(&m_uring);
+
+    if (!m_sqe)
+    {
+        std::cerr << "Failed to get SQE\n";
+        return;
+    }
+
+    m_sqe->opcode = IORING_OP_WRITE;
+    m_sqe->fd = m_fd;
+    m_sqe->addr = (uintptr_t)buf;
+    m_sqe->len = sizeof(buf);
+
+    io_uring_submit(&m_uring);
+
+    io_uring_wait_cqe(&m_uring, &m_cqe);
+
+    std::cout << "uring return:" << m_cqe->res << "\n";
+
+    io_uring_cqe_seen(&m_uring, m_cqe);
 }

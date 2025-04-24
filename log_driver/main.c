@@ -26,11 +26,20 @@
     nop();
 #endif
 
-#ifdef ENABLE_IOCTL_DELAY
-#define IOCTL_DELAY() mdelay(1)
+#ifdef ENABLE_DMP_KBUF
+#define DMP_KBUF(bytes) \
+    dmp(bytes);
 #else
-#define IOCTL_DELAY() nop()
+#define DMP_KBUF(bytes) \
+    nop();
+#endif
 
+#ifdef ENABLE_IOCTL_DELAY
+#define IOCTL_DELAY() \
+    mdelay(1)
+#else
+#define IOCTL_DELAY() \
+    nop()
 #endif
 
 static ktime_t anchor_time;
@@ -75,7 +84,7 @@ static void dma_dummy_device_release(struct device *dev);
 static int __init logmodule_init(void);
 static void __exit logmodule_exit(void);
 
-void dump_kbuf(int bytes);
+void dmp(int bytes);
 
 static struct file_operations fops = {
     write : logmodule_write,
@@ -86,7 +95,7 @@ static struct file_operations fops = {
     mmap : logmodule_mmap,
 };
 
-void dump_kbuf(int bytes)
+void dmp(int bytes)
 {
     int i;
     char buf[256];
@@ -107,7 +116,7 @@ void dump_kbuf(int bytes)
 
         if ((i + 1) % 16 == 0 || i == bytes - 1)
         {
-            LM_LOG("kbuf: [%03d] \t%s\n", i - (i % 16), buf);
+            pr_info("kbuf: [%03d] \t%s\n", i - (i % 16), buf);
             len = 0;
         }
     }
@@ -128,7 +137,7 @@ static int logmodule_uring_cmd(struct io_uring_cmd *cmd, unsigned int issue_flag
     LM_LOG("iou \t[ktime: %lld][opcode: %d][pid: %d]\n", ktime_get(), cmd->cmd_op, current->pid);
 
     io_uring_cmd_done(cmd, 0, 0, issue_flags);
-    return 0;
+    return -EIOCBQUEUED;
 }
 
 static int logmodule_open(struct inode *inode, struct file *file)
@@ -251,7 +260,7 @@ static int __init logmodule_init(void)
 
 static void __exit logmodule_exit(void)
 {
-    dump_kbuf(BUF_SIZE);
+    DMP_KBUF(BUF_SIZE);
 
     trace_exitf(current->pid);
 

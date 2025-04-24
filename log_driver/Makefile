@@ -3,7 +3,8 @@ logmodule-objs := main.o
 
 ccflags-y += -I$(PWD)
 # ccflags-y += -DENABLE_LOGMODULE_LOGGING
-ccflags-y += -DENABLE_IOCTL_DELAY
+# ccflags-y += -DENABLE_IOCTL_DELAY
+# ccflags-y += -DENABLE_DMP_KBUF
 
 
 PWD := $(CURDIR)

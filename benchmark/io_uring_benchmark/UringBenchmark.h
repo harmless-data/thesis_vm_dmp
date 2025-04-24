@@ -3,14 +3,6 @@
 
 #define DEFAULT_QUE_DEPTH 64
 
-struct io_uring_cmd
-{
-    __u64 data;
-    __u32 cmd_op;
-    __u32 cmd_len;
-    __u8 cmd[0];
-};
-
 class UringBenchmark
 {
 public:
@@ -19,8 +11,18 @@ public:
 
     void Run();
 
+    void BasicUringWrite();
+
 private:
+    void FillParamsSQPolling();
+
     struct io_uring m_uring;
+
+    struct io_uring_sqe *m_sqe; // Submission Queue Entry
+    struct io_uring_cqe *m_cqe; // Completion Queue Entry
+
+    struct io_uring_params *m_params;
+
     const uint64_t m_queDepth;
     int m_fd;
 };

@@ -11,7 +11,8 @@
 *.old
 *.svg
 */build
+*.json
 
 
 linux-source-6.1/*
-*FlameGraph/*
+FlameGraph/*
