@@ -4,6 +4,9 @@
 
 int main(int argc, char const *argv[])
 {
-    UringBenchmark tester{10, "/dev/logmoudle"};
+    UringBenchmark bench{"/dev/logmodule"};
+
+    bench.Run();
+
     return 0;
 }

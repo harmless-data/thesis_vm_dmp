@@ -5,5 +5,10 @@ project(uring_benchmark)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-add_executable(uring_benchmark main.cpp)
+add_executable(uring_benchmark 
+    main.cpp
+    UringBenchmark.h
+    UringBenchmark.cpp
+)
 
+target_link_libraries(uring_benchmark PRIVATE uring)

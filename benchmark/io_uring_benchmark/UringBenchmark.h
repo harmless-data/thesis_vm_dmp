@@ -1,19 +1,26 @@
 #include <liburing.h>
-
 #include <string>
+
+#define DEFAULT_QUE_DEPTH 64
+
+struct io_uring_cmd
+{
+    __u64 data;
+    __u32 cmd_op;
+    __u32 cmd_len;
+    __u8 cmd[0];
+};
 
 class UringBenchmark
 {
 public:
-    UringBenchmark(uint64_t que_depth, std::string file_path);
+    UringBenchmark(std::string file_path, uint64_t que_depth = DEFAULT_QUE_DEPTH);
+    ~UringBenchmark();
+
+    void Run();
 
 private:
-    struct io_uring uring;
-    const uint64_t que_depth;
-    const std::string file_path;
+    struct io_uring m_uring;
+    const uint64_t m_queDepth;
+    int m_fd;
 };
-
-UringBenchmark::UringBenchmark(uint64_t que_depth, std::string file_path)
-    : que_depth{que_depth}, file_path{file_path}
-{
-}

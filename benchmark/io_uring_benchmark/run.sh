@@ -1,1 +1,1 @@
-./build/uring_benchmark
+sudo ./perf_uring.sh build/uring_benchmark
