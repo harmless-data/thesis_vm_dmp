@@ -29,7 +29,7 @@ void UringBenchmark::Run()
     BasicUringWrite();
 }
 
-void UringBenchmark::StressTest(int n_items)
+void UringBenchmark::StressTest(unsigned int n_items)
 {
     static const char buf[] = "buf";
 

@@ -11,10 +11,9 @@ public:
 
     void Run();
 
-    void BasicUringWrite();
-
 private:
-    void FillParamsSQPolling();
+    void StressTest(unsigned int n_items);
+    void BasicUringWrite();
 
     struct io_uring m_uring;
 
