@@ -11,6 +11,7 @@
 #include <linux/dma-mapping.h>
 #include <linux/sched.h>
 #include <linux/delay.h>
+#inc
 
 #define DEVICE_NAME "logmodule"
 #define BUF_SIZE PAGE_SIZE

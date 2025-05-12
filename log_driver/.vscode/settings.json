@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "io_uring.h": "c"
+        "io_uring.h": "c",
+        "module.h": "c",
+        "sched.h": "c",
+        "unistd.h": "c"
     }
 }

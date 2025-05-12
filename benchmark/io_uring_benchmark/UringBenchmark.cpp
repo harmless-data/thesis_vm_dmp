@@ -31,6 +31,7 @@ void UringBenchmark::Run()
 
 void UringBenchmark::StressTest(unsigned int n_items)
 {
+    // EYO, ARE THE BUFFERS MMAPED?
     static const char buf[] = "buf";
 
     for (int i = 0; i < n_items; i++)
